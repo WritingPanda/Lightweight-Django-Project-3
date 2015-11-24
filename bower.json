@@ -1,0 +1,17 @@
+{
+  "name": "Lightweight-Django-Project-3",
+  "version": "0.0.1",
+  "homepage": "https://github.com/WritingPanda/Lightweight-Django-Project-3",
+  "authors": [
+    "Omar Quimbaya <omar.quimbaya4@gmail.com>"
+  ],
+  "description": "a scrum board",
+  "main": "manage.py",
+  "license": "MIT",
+  "install": {
+    "path": {
+      "css": "/board/static/board/css",
+      "js": "/board/static/board/js"
+    }
+  }
+}
