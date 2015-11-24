@@ -1,0 +1,48 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge">
+    <title>Scrum Board</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/html" id="home-template">
+        <h1>Welcome to my Scrum Board Project!</h1>
+    </script>
+    <script type="text/html" id="login-template">
+        <form action="" method="post">
+            <label for="id_username">Username</label>
+            <input type="text" id="id_username" name="username" maxlength="30" required />
+            <label for="id_password">Password</label>
+            <input type="password" id="id_password" name="password" required />
+            <button type="submit">Login</button>
+        </form>
+    </script>
+</head>
+<body>
+
+    <div id="content"></div>
+
+    <script src="{% static 'board/vendor/jquery/dist/jquery.js' %}"></script>
+    <script src="{% static 'board/vendor/underscore/underscore.js' %}"></script>
+    <script src="{% static 'board/vendor/backbone/backbone.js' %}"></script>
+    <script id="config" type="text/json">
+        {
+            "models": {},
+            "collections": {},
+            "views": {},
+            "router": null,
+            // We know from the project URLs that this information should be /api/token/.
+            // We can make use of the app configuration parsed by our app.js file to configure
+            // this information on the client (114).
+            "apiRoot": "{% url 'api-root' %}",
+            "apiLogin": "{% url 'api-token' %}"
+        }
+    </script>
+    <script src="{% static 'board/js/app.js' %}"></script>
+    <script src="{% static 'board/js/models.js' %}"></script>
+    <script src="{% static 'board/js/views.js' %}"></script>
+    <script src="{% static 'board/js/router.js' %}"></script>
+</body>
+</html>

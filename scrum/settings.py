@@ -25,8 +25,7 @@ SECRET_KEY = 't+zj&f(+=va02s_32(!a!=%31lt@8%nk36e4v#uh7y*_c()qr2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['localhost', ]
 
 # Application definition
 
@@ -71,16 +70,15 @@ WSGI_APPLICATION = 'scrum.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
-from .secret import SecretSquirrel as Secret
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': Secret.DB_NAME,
-        'USER': Secret.DB_USER,
-        'PASSWORD': Secret.DB_PASS,
-        'HOST': Secret.DB_HOST,
-        'PORT': Secret.DB_PORT,
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASS'],
+        'HOST': 'localhost',
+        'PORT': 5432,
     }
 }
 
