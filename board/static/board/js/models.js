@@ -1,6 +1,7 @@
 (function ($, Backbone, _, app) {
 
     // CSRF helper functions taken directly from Django docs
+    // https://docs.djangoproject.com/en/1.8/ref/csrf/
     function csrfSafeMethod(method) {
         // these HTTP methods do not require CSRF protection
         return (/^(GET|HEAD|OPTIONS|TRACE)$/i.test(method));
@@ -62,11 +63,11 @@
         delete: function () {
             this.save(null);
         },
-        authenticatied: function () {
+        authenticated: function () {
             return this.get('token') !== null;
         },
         _setupAuth: function (settings, originalOptions, xhr) {
-            if (this.authenticatied()) {
+            if (this.authenticated()) {
                 xhr.setRequestHeader(
                     'Authorization',
                     'Token ' + this.get('token')

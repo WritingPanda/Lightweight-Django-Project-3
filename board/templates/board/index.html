@@ -2,11 +2,13 @@
 <!DOCTYPE html>
 <html lang="en" class="no-js">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge">
     <title>Scrum Board</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge">
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'board/vendor/normalize.css/normalize.css' %}" />
+    <link rel="stylesheet" href="{% static 'board/css/board.css' %}" />
     <script type="text/html" id="home-template">
         <h1>Welcome to my Scrum Board Project!</h1>
     </script>
@@ -18,6 +20,15 @@
             <input type="password" id="id_password" name="password" required />
             <button type="submit">Login</button>
         </form>
+    </script>
+    <script type="text/html" id="header-template">
+        <span class="title">Scrum Board Example</span>
+        <% if (authenticated) { %>
+            <nav>
+                <a href="/" class="button">Your Sprints</a>
+                <a href="#" class="logout button">Logout</a>
+            </nav>
+        <% } %>
     </script>
 </head>
 <body>
@@ -33,9 +44,6 @@
             "collections": {},
             "views": {},
             "router": null,
-            // We know from the project URLs that this information should be /api/token/.
-            // We can make use of the app configuration parsed by our app.js file to configure
-            // this information on the client (114).
             "apiRoot": "{% url 'api-root' %}",
             "apiLogin": "{% url 'api-token' %}"
         }

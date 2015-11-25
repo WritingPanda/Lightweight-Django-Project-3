@@ -1,7 +1,7 @@
 # Ignoring all frontend dependencies
 # Keeping the static and board folders, however
 # Make sure to download bower-installer, as well
-board/static/board/vendor
+board/static/board/vendor/*
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Windows template

@@ -13,5 +13,11 @@
       "css": "/board/static/board/css",
       "js": "/board/static/board/js"
     }
+  },
+  "dependencies": {
+    "backbone": "~1.2.3",
+    "jquery": "~2.1.4",
+    "normalize.css": "~3.0.3",
+    "underscore": "~1.8.3"
   }
 }
