@@ -29,9 +29,11 @@
     $.ajaxPrefilter(function (settings, originalOptions, xhr) {
         var csrftoken;
         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-            // Send the token to same-origin, relative URLs only.
-            // Send the token only if the method warrants CSRF protection
-            // Using the CSRFToken value acquired earlier
+            /*
+                Send the token to same-origin, relative URLs only.
+                Send the token only if the method warrants CSRF protection
+                Using the CSRFToken value acquired earlier
+             */
             csrftoken = getCookie('csrftoken');
             xhr.setRequestHeader('X-CSRFToken', csrftoken);
         }
@@ -95,21 +97,40 @@
 
     app.models.Sprint = BaseModel.extend({});
     app.models.Task = BaseModel.extend({});
-    app.models.User = BaseModel.extend({});
+    app.models.User = BaseModel.extend({
+        idAttributemodel: 'username'
+    });
+    /*
+     *  The pagination implemented by the API wraps the list of objects with metadata
+     *   about the pages and total counts. To get this to work with Backbone, we need
+     *   to change the parse method on each collection.
+     *********************************************************************************
+     *   This is a minimal approach to handling the API pagination. For a
+     *   more comprehensive approach, take a look at backbone-paginator.
+     *   https://github.com/backbone-paginator/backbone.paginator
+     */
+    var BaseCollection = Backbone.Collection.extend({
+        parse: function (response) {
+            this._next = response.next;
+            this._previous = response.previous;
+            this._count = response.count;
+            return response.results || [];
+        }
+    });
 
     app.collections.ready = $.getJSON(app.apiRoot);
     app.collections.ready.done(function (data) {
-        app.collections.Sprints = Backbone.Collection.extend({
+        app.collections.Sprints = BaseCollection.extend({
             model: app.models.Sprint,
             url: data.sprints
         });
         app.sprints = new app.collections.Sprints();
-        app.collections.Tasks = Backbone.Collection.extend({
+        app.collections.Tasks = BaseCollection.extend({
             model: app.models.Task,
             url: data.tasks
         });
         app.tasks = new app.collections.Tasks();
-        app.collections.Users = Backbone.Collection.extend({
+        app.collections.Users = BaseCollection.extend({
             model: app.models.User,
             url: data.users
         });
