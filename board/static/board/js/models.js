@@ -95,7 +95,14 @@
         }
     });
 
-    app.models.Sprint = BaseModel.extend({});
+    app.models.Sprint = BaseModel.extend({
+        fetchTasks: function () {
+            var links = this.get('links');
+            if (links && links.tasks) {
+                app.tasks.fetch({url: links.tasks, remove: false});
+            }
+        }
+    });
     app.models.Task = BaseModel.extend({});
     app.models.User = BaseModel.extend({
         idAttributemodel: 'username'
@@ -115,6 +122,31 @@
             this._previous = response.previous;
             this._count = response.count;
             return response.results || [];
+        },
+        getOrFetch: function (id) {
+            var result = new $.Deferred(),
+               /*
+                * We look for the model in the current collection by its ID using this.get.
+                * Calling this.get does not make a request to the API server; it only looks
+                * for a model matching the given ID in the current in-memory list of models
+                * in the collection. If the model is found in the collection, the deferred
+                * object is immediately resolved with the result. (145)
+                */
+                model = this.get(id);
+            if (!model) {
+                model = this.push({id: id});
+                model.fetch({
+                    success: function (model, response, options) {
+                        result.resolve(model);
+                    },
+                    error: function (model, response, options) {
+                        result.reject(model, response);
+                    }
+                });
+            } else {
+                result.resolve(model);
+            }
+            return result;
         }
     });
 
@@ -127,7 +159,10 @@
         app.sprints = new app.collections.Sprints();
         app.collections.Tasks = BaseCollection.extend({
             model: app.models.Task,
-            url: data.tasks
+            url: data.tasks,
+            getBacklog: function () {
+                this.fetch({remove: false, data: {backlog: 'True'}});
+            }
         });
         app.tasks = new app.collections.Tasks();
         app.collections.Users = BaseCollection.extend({
