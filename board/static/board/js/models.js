@@ -103,7 +103,28 @@
             }
         }
     });
-    app.models.Task = BaseModel.extend({});
+    app.models.Task = BaseModel.extend({
+        // Helps map the task to the StatusView to which it should be
+        // associated (151)
+        statusClass: function () {
+            var sprint = this.get('sprint'),
+                status;
+            if (!sprint) {
+                status = 'unassigned';
+            } else {
+                status = ['todo', 'active', 'testing', 'done'][this.get('status') - 1];
+            }
+            return status;
+        },
+        // Determines what it means for the task to be on the backlog (151)
+        inBacklog: function () {
+            return !this.get('sprint');
+        },
+        // Determines if the task is in the given sprint (151)
+        inSprint: function (sprint) {
+            return sprint.get('id') == this.get('sprint');
+        }
+    });
     app.models.User = BaseModel.extend({
         idAttributemodel: 'username'
     });

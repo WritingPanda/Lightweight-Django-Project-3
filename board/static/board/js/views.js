@@ -215,6 +215,7 @@
              */
             this.sprintId = options.sprintId;
             this.sprint = null;
+            this.tasks = [];
             this.statuses = {
                 unassigned: new StatusView({
                     sprint: null, status: 1, title: 'Backlog'
@@ -233,14 +234,21 @@
                 })
             };
             app.collections.ready.done(function () {
+                app.tasks.on('add', self.addTask, self);
                 app.sprints.getOrFetch(self.sprintId).done(function (sprint) {
                     self.sprint = sprint;
                     self.render();
+                    // Add any current tasks
+                    app.tasks.each(self.addTask, self);
+                    // Fetch tasks for the current sprint
+                    sprint.fetchTasks();
                 }).fail(function (sprint) {
                     self.sprint = sprint;
                     self.sprint.invalid = true;
                     self.render();
                 });
+                // Fetch unassigned tasks
+                app.tasks.getBacklog();
             });
         },
         getContext: function () {
@@ -253,6 +261,18 @@
                 view.delegateEvents();
                 view.render();
             }, this);
+        },
+        addTask: function (task) {
+            if (task.inBacklog() || task.inSprint(this.sprint)) {
+                this.tasks[task.get('id')] = task;
+                this.renderTask(task);
+            }
+        },
+        renderTask: function (task) {
+            var column = task.statusClass(),
+                container = this.statuses[column],
+                html = _.template('<div><%- task.get("name") %></div>', {task: task});
+            $('.list', container.$el).append(html);
         }
     });
 
@@ -263,4 +283,4 @@
 
 })(jQuery, Backbone, _, app);
 
-// TODO: work on page 141 of the Lightweight Django Book. Sprint Detail Page
+// TODO: work on AddTaskView on page 153
