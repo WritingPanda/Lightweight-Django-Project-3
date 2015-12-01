@@ -17,7 +17,10 @@
 
     var FormView = TemplateView.extend({
         events: {
-            'submit form': 'submit'
+            // Binds any submit from a form or button.cancel click to
+            // submit and done methods respectively
+            'submit form': 'submit',
+            'click button.cancel': 'done'
         },
         errorTemplate: _.template('<span class="error"><%- msg %></span>'),
         clearErrors: function () {
@@ -67,14 +70,6 @@
     var NewSprintView = FormView.extend({
         templateName: '#new-sprint-template',
         className: 'new-sprint',
-        /*
-         * Clicking the add button will trigger the form submit , which is handled by the
-         * FormView base. In addition to the default submit event handler, the view will
-         * also handle a cancel button to call the done method defined by the FormView. (139)
-         */
-        events: _.extend({
-            'click button.cancel': 'done'
-        }, FormView.prototype.events),
         submit: function (event) {
             var self = this,
                 attributes = {};
@@ -188,10 +183,40 @@
         }
     });
 
+    var AddTaskView = FormView.extend({
+        templateName: '#new-task-template',
+        events: _.extend({
+            'click button.cancel': 'done'
+        }, FormView.prototype.events),
+        sumbit: function (event) {
+            var self = this,
+                attributes = {};
+            FormView.prototype.submit.apply(this, arguments);
+            // Serializes the form into digestible JSON data that API can consume (153)
+            attributes = this.serializeForm(this.form);
+            app.collections.ready.done(function () {
+                // Create the new tasks inside the collection and assign the various
+                // attributes for interactions with the API (153)
+                app.tasks.create(attributes, {
+                    wait: true,
+                    success: $.proxy(self.success, self),
+                    // Failure is bound to the modelFailure callback from the FormView (153)
+                    error: $.proxy(self.modelFailure, self)
+                });
+            });
+        },
+        success: function (model, resp, options) {
+            this.done();
+        }
+    });
+
     var StatusView = TemplateView.extend({
         tagName: 'section',
         className: 'status',
         templateName: '#status-template',
+        events: {
+            'click button.add': 'renderAddForm'
+        },
         initialize: function (options) {
             TemplateView.prototype.initialize.apply(this, arguments);
             this.sprint = options.sprint;
@@ -200,6 +225,39 @@
         },
         getContext: function () {
             return {sprint: this.sprint, title: this.title};
+        },
+        renderAddForm: function (event) {
+            var view = new AddTaskView(),
+                link = $(event.currentTarget);
+            event.preventDefault();
+            link.before(view.el);
+            link.hide();
+            view.render();
+            view.on('done', function () {
+                link.show();
+            });
+        },
+        addTask: function (view) {
+            $('.list', this.$el).append(view.el);
+        }
+    });
+
+    var TaskItemView = TemplateView.extend({
+        tagName: 'div',
+        className: 'task-item',
+        templateName: '#task-item-template',
+        initialize: function (options) {
+            TemplateView.prototype.initialize.apply(this, arguments);
+            this.task = options.task;
+            this.task.on('change', this.render, this);
+            this.task.on('remove', this.remove, this);
+        },
+        getContext: function () {
+            return {task: this.task};
+        },
+        render: function () {
+            TemplateView.prototype.render.apply(this, arguments);
+            this.$el.css('order', this.task.get('order'));
         }
     });
 
@@ -215,23 +273,18 @@
              */
             this.sprintId = options.sprintId;
             this.sprint = null;
-            this.tasks = [];
+            this.tasks = {};
             this.statuses = {
                 unassigned: new StatusView({
-                    sprint: null, status: 1, title: 'Backlog'
-                }),
+                    sprint: null, status: 1, title: 'Backlog' }),
                 todo: new StatusView({
-                    sprint: this.sprintId, status: 1, title: 'Not Started'
-                }),
+                    sprint: this.sprintId, status: 1, title: 'Not Started' }),
                 active: new StatusView({
-                    sprint: this.sprintId, status: 2, title: 'In Development'
-                }),
+                    sprint: this.sprintId, status: 2, title: 'In Development' }),
                 testing: new StatusView({
-                    sprint: this.sprintId, status: 3, title: 'In Testing'
-                }),
+                    sprint: this.sprintId, status: 3, title: 'In Testing' }),
                 done: new StatusView({
-                    sprint: this.sprintId, status: 4, title: 'Completed'
-                })
+                    sprint: this.sprintId, status: 4, title: 'Completed' })
             };
             app.collections.ready.done(function () {
                 app.tasks.on('add', self.addTask, self);
@@ -261,18 +314,29 @@
                 view.delegateEvents();
                 view.render();
             }, this);
+            _.each(this.tasks, function (view, taskId) {
+                var task = app.tasks.get(taskId);
+                view.remove();
+                this.tasks[taskId] = this.renderTask(task);
+            }, this);
         },
         addTask: function (task) {
             if (task.inBacklog() || task.inSprint(this.sprint)) {
-                this.tasks[task.get('id')] = task;
-                this.renderTask(task);
+                this.tasks[task.get('id')] = this.renderTask(task);
             }
         },
         renderTask: function (task) {
-            var column = task.statusClass(),
-                container = this.statuses[column],
-                html = _.template('<div><%- task.get("name") %></div>', {task: task});
-            $('.list', container.$el).append(html);
+            var view = new TaskItemView({task: task});
+            // creates an instance of the new TaskItemView and loops through the status
+            // subviews. renderTask now returns the subview, which is used by add Task
+            // to track the task to view mapping (159).
+            _.each(this.statuses, function (container, name) {
+                if (container.sprint == task.get('sprint') && container.status == task.get('status')) {
+                    container.addTask(view);
+                }
+            });
+            view.render();
+            return view;
         }
     });
 
@@ -282,5 +346,3 @@
     app.views.SprintView = SprintView;
 
 })(jQuery, Backbone, _, app);
-
-// TODO: work on AddTaskView on page 153
